@@ -4,9 +4,12 @@
 
 package it.polito.tdp.yelp;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.yelp.model.Business;
 import it.polito.tdp.yelp.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -35,32 +38,80 @@ public class FXMLController {
     private Button btnPercorso; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbCitta"
-    private ComboBox<?> cmbCitta; // Value injected by FXMLLoader
+    private ComboBox<String> cmbCitta; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtX"
     private TextField txtX; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbAnno"
-    private ComboBox<?> cmbAnno; // Value injected by FXMLLoader
+    private ComboBox<Integer> cmbAnno; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbLocale"
-    private ComboBox<?> cmbLocale; // Value injected by FXMLLoader
+    private ComboBox<Business> cmbLocale; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
+    	try {
+    	Business b=cmbLocale.getValue();
+    	String s=txtX.getText();
+    	double i=Double.parseDouble(s);
+    	if(i<0 ||i>1) {
+    		 txtResult.setText("Isnerire valore compreso tra 0 e 1");
+    		 return;
+    	}
+    	List<Business> lista=model.calcolaPercorso(i,b);
+    	String ss="";
+    	if(lista.size()==0) {
+    		ss="Non ci sono percorsi";
+    	}
+    	
+    	for(Business bb:lista) {
+    		ss=ss+bb.getBusinessName()+"\n";
+    	}
+    	 txtResult.setText(ss);
+    	
+    	}catch(NullPointerException npe) {
+    	 txtResult.setText("Selezionare valori corretti");
+    	}catch(NumberFormatException nfe) {
+    		 txtResult.setText("Inserire un valore numerico");
+    	}
+    	
     	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-
+    	try {
+    	int i=cmbAnno.getValue();
+    	String citta=cmbCitta.getValue();
+    	model.creaGrafo(citta, i);
+    	txtResult.setText("#vertici "+model.getVertexsize()+"\n"+"#archi "+model.getArchiSize());
+    	
+    	
+    	}catch(NullPointerException npe) {
+    		
+    		txtResult.setText("Selezionare valori corretti");
+    	}
+    	  cmbLocale.getItems().addAll(model.getVertici());
+    	
+    	
+    
     }
 
     @FXML
     void doLocaleMigliore(ActionEvent event) {
+
+    	if(model.getVertexsize()==0 ) {
+    		txtResult.setText("Grafo non creato");
+    		return;
+    	}else {
+    		txtResult.setText(model.getMigliore().getBusinessName());
+    	}
+    	
+    	
 
     }
 
@@ -78,5 +129,17 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+        List<Business> lista=model.getCity();
+        for(Business bb:lista) {
+        	if(!cmbCitta.getItems().contains(bb.getCity()))
+        	cmbCitta.getItems().add(bb.getCity());
+        	
+        }
+        List<Integer> anno=new LinkedList<Integer>();
+        for(int i=2005;i<2014;i++)
+        	anno.add(i);
+        cmbAnno.getItems().addAll(anno);
+        
+      
     }
 }
